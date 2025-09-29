@@ -23,7 +23,7 @@ CREATE TABLE savings_account(
     FOREIGN KEY (id) REFERENCES accounts(id)
 );
 
-CREATE TABLE Transaction (
+CREATE TABLE transactions (
     id VARCHAR(26) PRIMARY KEY,
     date TIMESTAMP NOT NULL,
     amount DOUBLE NOT NULL,
