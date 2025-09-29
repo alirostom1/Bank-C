@@ -8,5 +8,5 @@ import io.github.alirostom1.bankc.model.entity.Client;
 
 public interface ClientRepository extends BaseRepository<Client> {
     Optional<Client> findByEmail(String email) throws SQLException;
-    List<Client> findByName(String name) throws SQLException;
+    Optional<Client> findByName(String name) throws SQLException;
 }
