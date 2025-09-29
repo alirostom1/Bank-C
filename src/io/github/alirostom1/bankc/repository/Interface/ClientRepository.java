@@ -1,7 +1,6 @@
 package io.github.alirostom1.bankc.repository.Interface;
 
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Optional;
 
 import io.github.alirostom1.bankc.model.entity.Client;
