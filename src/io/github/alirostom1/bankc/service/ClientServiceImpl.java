@@ -4,16 +4,20 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
+import io.github.alirostom1.bankc.model.entity.Account;
 import io.github.alirostom1.bankc.model.entity.Client;
+import io.github.alirostom1.bankc.repository.Interface.AccountRepository;
 import io.github.alirostom1.bankc.repository.Interface.ClientRepository;
 import io.github.alirostom1.bankc.service.Interface.ClientService;
 
 public class ClientServiceImpl implements ClientService {
     private final ClientRepository clientRepo;
+    private final AccountRepository accountRepo;
 
 
-    public ClientServiceImpl(ClientRepository clientRepo){
+    public ClientServiceImpl(ClientRepository clientRepo,AccountRepository accountRepo){
         this.clientRepo = clientRepo;
+        this.accountRepo = accountRepo;
     }
 
     @Override
@@ -67,20 +71,26 @@ public class ClientServiceImpl implements ClientService {
         try{
             return clientRepo.findAll();
         }catch(SQLException e){
-            throw new RuntimeException("Internal error,please try again late!");
+            throw new RuntimeException("Internal error,please try again late!",e);
         }
     }
 
     @Override
     public double getTotalBalance(String clientId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getTotalBalance'");
+        try{
+            return accountRepo.findByClientId(clientId).stream().mapToDouble(Account::getBalance).sum();
+        }catch(SQLException e){
+            throw new RuntimeException("Internal error,please try again late!",e);
+        }
     }
 
     @Override
     public int getAccountCount(String clientId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAccountCount'");
+        try{
+            return accountRepo.findByClientId(clientId).size();
+        }catch(SQLException e){
+            throw new RuntimeException("Internal error,please try again late!",e);
+        }
     }
     
 }
