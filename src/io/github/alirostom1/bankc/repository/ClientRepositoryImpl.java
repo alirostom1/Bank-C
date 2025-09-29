@@ -106,20 +106,19 @@ public class ClientRepositoryImpl implements ClientRepository {
     }
 
     @Override
-    public List<Client> findByName(String name) throws SQLException{
+    public Optional<Client> findByName(String name) throws SQLException{
         String query = "SELECT * FROM clients WHERE name = ?";
         try(PreparedStatement stmt = connection.prepareStatement(query)){
             stmt.setString(1, name);
             ResultSet rs = stmt.executeQuery();
-            List<Client> clients = new ArrayList<>();
-            while(rs.next()){
-                clients.add(new Client(
+            if(rs.next()){
+                return Optional.of(new Client(
                     rs.getString("id"),
                     rs.getString("name"),
                     rs.getString("email")
                 ));
             }
-            return clients;
+            return Optional.empty();
 
         }
     }
