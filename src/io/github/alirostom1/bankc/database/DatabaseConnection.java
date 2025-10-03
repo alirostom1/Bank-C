@@ -9,7 +9,7 @@ public class DatabaseConnection {
 
     private DatabaseConnection() {
         try {
-            this.connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/payflow", "root", "123456789");
+            this.connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/bankc", "root", "123456789");
         } catch (Exception e) {
             throw new RuntimeException("Failed to connect to the database", e);
         }
