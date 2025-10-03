@@ -6,8 +6,8 @@ public final class SavingsAccount extends Account{
         super(id, number, balance, clientId);
         this.interestRate = interestRate;
     }
-    public SavingsAccount( String number, double balance, String clientId, double interestRate) {
-        super(number, balance, clientId);
+    public SavingsAccount( double balance, String clientId, double interestRate) {
+        super(balance, clientId);
         this.interestRate = interestRate;   
     }
     public double getInterestRate() {
