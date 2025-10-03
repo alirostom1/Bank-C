@@ -14,4 +14,5 @@ public interface TransactionRepository extends BaseRepository<Transaction> {
     List<Transaction> findByDateRange(LocalDateTime startDate, LocalDateTime endDate) throws SQLException;
     List<Transaction> findByAmountRange(double minAmount, double maxAmount) throws SQLException;
     List<Transaction> findByLocation(String location) throws SQLException;
+    void deleteByAccountId(String accountId) throws SQLException;
 }

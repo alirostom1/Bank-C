@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
+import java.util.UUID;
 
 import io.github.alirostom1.bankc.model.entity.Transaction;
 import io.github.alirostom1.bankc.model.enums.TransactionType;
@@ -26,8 +26,8 @@ public class TransactionRepositoryImpl implements TransactionRepository {
     public void save(Transaction t) throws SQLException {
         String query = "INSERT INTO transactions(id,date,amount,type,location,accountId) values(?,?,?,?,?,?)";
         try(PreparedStatement stmt = connection.prepareStatement(query)){
-            stmt.setString(1, t.id());
-            stmt.setTimestamp(2, Timestamp.valueOf(t.date()));
+            stmt.setString(1, UUID.randomUUID().toString());
+            stmt.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
             stmt.setDouble(3,t.amount());
             stmt.setString(4, t.type().toString());
             stmt.setString(5, t.location());
@@ -95,6 +95,15 @@ public class TransactionRepositoryImpl implements TransactionRepository {
         String query = "DELETE FROM transactions where id = ?";
         try(PreparedStatement stmt = connection.prepareStatement(query)){
             stmt.setString(1, id);
+            stmt.executeUpdate();
+        }
+    }
+
+    @Override
+    public void deleteByAccountId(String accountId) throws SQLException {
+        String query = "DELETE FROM transactions where accountId = ?";
+        try(PreparedStatement stmt = connection.prepareStatement(query)){
+            stmt.setString(1, accountId);
             stmt.executeUpdate();
         }
     }

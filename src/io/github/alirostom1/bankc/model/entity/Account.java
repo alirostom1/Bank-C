@@ -1,6 +1,7 @@
 package io.github.alirostom1.bankc.model.entity;
 
 import java.util.UUID;
+import io.github.alirostom1.bankc.util.Generator;
 
 public sealed class Account permits CheckingAccount, SavingsAccount {
     private String id;
@@ -14,10 +15,10 @@ public sealed class Account permits CheckingAccount, SavingsAccount {
         this.balance = balance;
         this.clientId = clientId;
     }
-    public Account(String number,double balance, String clientId) {
+    public Account(double balance, String clientId) {
         this.id = UUID.randomUUID().toString();
         this.balance = balance;
-        this.number = number;
+        this.number = Generator.generateAccountCode();
         this.clientId = clientId;
     }
 

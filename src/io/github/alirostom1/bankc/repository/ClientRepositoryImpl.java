@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import io.github.alirostom1.bankc.model.entity.Client;
 import io.github.alirostom1.bankc.repository.Interface.ClientRepository;
@@ -22,7 +23,7 @@ public class ClientRepositoryImpl implements ClientRepository {
     public void save(Client c) throws SQLException {
         String query = "INSERT INTO clients (id, name, email) VALUES (?, ?, ?)";
         try(PreparedStatement stmt = connection.prepareStatement(query)){
-            stmt.setString(1, c.id());
+            stmt.setString(1, UUID.randomUUID().toString());
             stmt.setString(2, c.name());
             stmt.setString(3, c.email());
             stmt.executeUpdate();

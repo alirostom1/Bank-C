@@ -6,8 +6,8 @@ public final class CheckingAccount extends Account{
         super(id, number, balance, clientId);
         this.overdraftLimit = overdraftLimit;
     }
-    public CheckingAccount( String number, double balance, String clientId, double overdraftLimit) {
-        super(number, balance, clientId);
+    public CheckingAccount(double balance, String clientId, double overdraftLimit) {
+        super(balance, clientId);
         this.overdraftLimit = overdraftLimit;   
     }
     public double getOverdraftLimit() {
