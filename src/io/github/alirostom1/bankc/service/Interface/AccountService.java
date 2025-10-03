@@ -1,16 +1,19 @@
 package io.github.alirostom1.bankc.service.Interface;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
-import io.github.alirostom1.bankc.model.entity.Account;
+import io.github.alirostom1.bankc.model.dto.AccountRequestDto;
+import io.github.alirostom1.bankc.model.dto.AccountResponseDto;
 
 public interface AccountService {
-    void createAccount(Account acc);
-    void updateAccount(Account acc);
-    Optional<Account> findAccountById(String accountId);
-    Optional<Account> findAccountByNumber(String number);
-    List<Account> findAccountsByClientId(String clientId);
-    Optional<Account> getAccountWithMaxBalance();
-    Optional<Account> getAccountWithMinBalance();
+    void createAccount(AccountRequestDto acc);
+    void updateAccount(AccountRequestDto acc);
+    void deleteAccount(String accountId);
+    Optional<AccountResponseDto> findAccountById(String accountId);
+    Optional<AccountResponseDto> findAccountByNumber(String number);
+    List<AccountResponseDto> findAccountsByClientId(String clientId);
+    Optional<AccountResponseDto> getAccountWithMaxBalance();
+    Optional<AccountResponseDto> getAccountWithMinBalance();
 }

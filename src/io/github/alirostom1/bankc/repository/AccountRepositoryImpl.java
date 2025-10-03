@@ -7,11 +7,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import io.github.alirostom1.bankc.model.entity.Account;
 import io.github.alirostom1.bankc.model.entity.CheckingAccount;
 import io.github.alirostom1.bankc.model.entity.SavingsAccount;
 import io.github.alirostom1.bankc.repository.Interface.AccountRepository;
+import io.github.alirostom1.bankc.util.Generator;
 
 public class AccountRepositoryImpl implements AccountRepository {
     private final Connection connection;
@@ -21,10 +23,11 @@ public class AccountRepositoryImpl implements AccountRepository {
 
     @Override
     public void save(Account acc) throws SQLException {
-        String query = "INSERT INTO accounts (id, number, balance, client_id,accountType) VALUES (?, ?, ?, ?, ?)";
+        String query = "INSERT INTO accounts (id, number, balance, clientId,accountType) VALUES (?, ?, ?, ?, ?)";
         try(PreparedStatement stmt = connection.prepareStatement(query)){
-            stmt.setString(1, acc.getId());
-            stmt.setString(2, acc.getNumber());
+            String id = UUID.randomUUID().toString();
+            stmt.setString(1, id);
+            stmt.setString(2, Generator.generateAccountCode());
             stmt.setDouble(3, acc.getBalance());
             stmt.setString(4, acc.getClientId());
             if(acc instanceof SavingsAccount){
@@ -36,14 +39,14 @@ public class AccountRepositoryImpl implements AccountRepository {
             if(acc instanceof SavingsAccount){
                 String savingsQuery = "INSERT INTO savings_accounts (id, interest_rate) VALUES (?, ?)";
                 try(PreparedStatement savingsStmt = connection.prepareStatement(savingsQuery)){
-                    savingsStmt.setString(1, acc.getId());
+                    savingsStmt.setString(1, id);
                     savingsStmt.setDouble(2, ((SavingsAccount) acc).getInterestRate());
                     savingsStmt.executeUpdate();
                 }
             }else{
-                String checkingQuery = "INSERT INTO checking_accounts (id,overdraft_limit) VALUES (?)";
+                String checkingQuery = "INSERT INTO checking_accounts (id,overdraft_limit) VALUES (?,?)";
                 try(PreparedStatement checkingStmt = connection.prepareStatement(checkingQuery)){
-                    checkingStmt.setString(1, acc.getId());
+                    checkingStmt.setString(1, id);
                     checkingStmt.setDouble(2, ((CheckingAccount) acc).getOverdraftLimit());
                     checkingStmt.executeUpdate();
                 }
@@ -69,7 +72,7 @@ public class AccountRepositoryImpl implements AccountRepository {
                                 rs.getString("id"),
                                 rs.getString("number"),
                                 rs.getDouble("balance"),
-                                rs.getString("client_id"),
+                                rs.getString("clientId"),
                                 savingsRs.getDouble("interest_rate")
                             ));
                         }
@@ -84,7 +87,7 @@ public class AccountRepositoryImpl implements AccountRepository {
                                 rs.getString("id"),
                                 rs.getString("number"),
                                 rs.getDouble("balance"),
-                                rs.getString("client_id"),
+                                rs.getString("clientId"),
                                 checkingRs.getDouble("overdraft_limit")
                             ));
                         }
@@ -113,7 +116,7 @@ public class AccountRepositoryImpl implements AccountRepository {
                                 rs.getString("id"),
                                 rs.getString("number"),
                                 rs.getDouble("balance"),
-                                rs.getString("client_id"),
+                                rs.getString("clientId"),
                                 savingsRs.getDouble("interest_rate")
                             ));
                         }
@@ -128,7 +131,7 @@ public class AccountRepositoryImpl implements AccountRepository {
                                 rs.getString("id"),
                                 rs.getString("number"),
                                 rs.getDouble("balance"),
-                                rs.getString("client_id"),
+                                rs.getString("clientId"),
                                 checkingRs.getDouble("overdraft_limit")
                             ));
                         }
@@ -141,7 +144,7 @@ public class AccountRepositoryImpl implements AccountRepository {
 
     @Override
     public void update(Account acc) throws SQLException {
-        String query = "UPDATE accounts SET number = ?, balance = ?, client_id = ? WHERE id = ?";
+        String query = "UPDATE accounts SET number = ?, balance = ?, clientId = ? WHERE id = ?";
         try(PreparedStatement stmt = connection.prepareStatement(query)){
             stmt.setString(1, acc.getNumber());
             stmt.setDouble(2, acc.getBalance());
@@ -149,14 +152,14 @@ public class AccountRepositoryImpl implements AccountRepository {
             stmt.setString(4, acc.getId());
             stmt.executeUpdate();
             if(acc instanceof SavingsAccount){
-                String savingsQuery = "UPDATE savings_accounts SET interest_rate = ? WHERE account_id = ?";
+                String savingsQuery = "UPDATE savings_accounts SET interest_rate = ? WHERE id = ?";
                 try(PreparedStatement savingsStmt = connection.prepareStatement(savingsQuery)){
                     savingsStmt.setDouble(1, ((SavingsAccount) acc).getInterestRate());
                     savingsStmt.setString(2, acc.getId());
                     savingsStmt.executeUpdate();
                 }
             }else if(acc instanceof CheckingAccount){
-                String checkingQuery = "UPDATE checking_accounts SET overdraft_limit = ? WHERE account_id = ?";
+                String checkingQuery = "UPDATE checking_accounts SET overdraft_limit = ? WHERE id = ?";
                 try(PreparedStatement checkingStmt = connection.prepareStatement(checkingQuery)){
                     checkingStmt.setDouble(1, ((CheckingAccount) acc).getOverdraftLimit());
                     checkingStmt.setString(2, acc.getId());
@@ -175,17 +178,22 @@ public class AccountRepositoryImpl implements AccountRepository {
             if(rs.next()){
                 String accountType = rs.getString("accountType");
                 if(accountType.equals("SAVINGS")){
-                    String savingsQuery = "DELETE FROM savings_accounts WHERE account_id = ?";
+                    String savingsQuery = "DELETE FROM savings_accounts WHERE id = ?";
                     try(PreparedStatement savingsStmt = connection.prepareStatement(savingsQuery)){
                         savingsStmt.setString(1, id);
                         savingsStmt.executeUpdate();
                     }
                 }else if(accountType.equals("CHECKING")){
-                    String checkingQuery = "DELETE FROM checking_accounts WHERE account_id = ?";
+                    String checkingQuery = "DELETE FROM checking_accounts WHERE id = ?";
                     try(PreparedStatement checkingStmt = connection.prepareStatement(checkingQuery)){
                         checkingStmt.setString(1, id);
                         checkingStmt.executeUpdate();
                     }
+                }
+                String accQery = "Delete from accounts where id = ?";
+                try(PreparedStatement accStmt = connection.prepareStatement(accQery)){
+                    accStmt.setString(1, id);
+                    accStmt.executeUpdate();
                 }
             }
         }
@@ -196,21 +204,22 @@ public class AccountRepositoryImpl implements AccountRepository {
         String query = "select * from accounts where clientId = ?";
         List<Account> accounts = new ArrayList<>();
         try(PreparedStatement stmt = connection.prepareStatement(query)){
+            stmt.setString(1, clientId);
             ResultSet rs = stmt.executeQuery();
             while(rs.next()){
                 String accountType = rs.getString("accountType");
                 if(accountType.equals("SAVINGS")){
-                    String savingsQuery = "SELECT * from savings_account where id = ?";
+                    String savingsQuery = "SELECT * from savings_accounts where id = ?";
                     try(PreparedStatement savingsStmt = connection.prepareStatement(savingsQuery)){
                         savingsStmt.setString(1, rs.getString("id"));
                         ResultSet savingsRs = savingsStmt.executeQuery();
                         if(savingsRs.next()){
-                            SavingsAccount savingsAccount = new SavingsAccount(rs.getString("id"),rs.getString("number"),rs.getDouble("balance"),rs.getString("clientId"),savingsRs.getDouble("interestRate"));
+                            SavingsAccount savingsAccount = new SavingsAccount(rs.getString("id"),rs.getString("number"),rs.getDouble("balance"),rs.getString("clientId"),savingsRs.getDouble("interest_rate"));
                             accounts.add(savingsAccount);
                         }
                     }
                 }else if(accountType.equals("CHECKING")){
-                    String checkingQuery = "SELECT * from checkings_account where id = ?";
+                    String checkingQuery = "SELECT * from checking_accounts where id = ?";
                     try(PreparedStatement checkingStmt = connection.prepareStatement(checkingQuery)){
                         checkingStmt.setString(1, rs.getString("id"));
                         ResultSet checkingRs = checkingStmt.executeQuery();
@@ -234,16 +243,16 @@ public class AccountRepositoryImpl implements AccountRepository {
             if(rs.next()){
                 String accountType = rs.getString("accountType");
                 if(accountType.equals("SAVINGS")){
-                    String savingsQuery = "SELECT * FROM savings_account where id = ?";
+                    String savingsQuery = "SELECT * FROM savings_accounts where id = ?";
                     try(PreparedStatement savingsStmt = connection.prepareStatement(savingsQuery)){
                         savingsStmt.setString(1,rs.getString("id"));
                         ResultSet savingsRs = savingsStmt.executeQuery();
                         if(savingsRs.next()){
-                            return Optional.of(new SavingsAccount(rs.getString("id"),rs.getString("number"),rs.getDouble("balance"),rs.getString("clientId"),savingsRs.getDouble("interestRate")));
+                            return Optional.of(new SavingsAccount(rs.getString("id"),rs.getString("number"),rs.getDouble("balance"),rs.getString("clientId"),savingsRs.getDouble("interest_rate")));
                         }
                     }
                 }else if(accountType.equals("CHECKING")){
-                    String checkingQuery = "SELECT * FROM checkings_account where id = ?";
+                    String checkingQuery = "SELECT * FROM checking_accounts where id = ?";
                     try(PreparedStatement checkingStmt = connection.prepareStatement(checkingQuery)){
                         checkingStmt.setString(1,rs.getString("id"));
                         ResultSet checkingRs = checkingStmt.executeQuery();

@@ -11,10 +11,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import io.github.alirostom1.bankc.model.dto.ClientResponseDto;
+import io.github.alirostom1.bankc.model.dto.TransactionResponseDto;
 import io.github.alirostom1.bankc.model.entity.Account;
 import io.github.alirostom1.bankc.model.entity.Client;
 import io.github.alirostom1.bankc.model.entity.Transaction;
 import io.github.alirostom1.bankc.model.enums.TransactionType;
+import io.github.alirostom1.bankc.model.mapper.ClientMapper;
+import io.github.alirostom1.bankc.model.mapper.TransactionMapper;
 import io.github.alirostom1.bankc.repository.Interface.AccountRepository;
 import io.github.alirostom1.bankc.repository.Interface.ClientRepository;
 import io.github.alirostom1.bankc.repository.Interface.TransactionRepository;
@@ -32,11 +36,11 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public List<Client> getTop5ClientsByBalance() {
+    public List<ClientResponseDto> getTop5ClientsByBalance() {
         try{
             List<Client> clients = clientRepository.findAll();
             return clients.stream()
-                .sorted(Comparator.comparingDouble(this::getTotalBalanceForClient).reversed()).limit(5).collect(Collectors.toList());
+                .sorted(Comparator.comparingDouble(this::getTotalBalanceForClient).reversed()).limit(5).map(ClientMapper::clientToDto).collect(Collectors.toList());
         }catch(Exception e){
             throw new RuntimeException("Internal error,please try again late!",e);
         }
@@ -62,26 +66,26 @@ public class ReportServiceImpl implements ReportService {
             Map<TransactionType,Long> countByType = txs.stream().collect(Collectors.groupingBy(Transaction::type,Collectors.counting()));
             double totalVolume = txs.stream().mapToDouble(Transaction::amount).sum();
             Map<String,Object> repoort = new HashMap<>();
-            repoort.put("countByType",countByType);
-            repoort.put("totalVolume",totalVolume);
+            repoort.put("Count of transaction By type",countByType);
+            repoort.put("Total volume of transactions",totalVolume);
             return repoort;
             
         }catch(SQLException e){
-            throw new RuntimeException();
+            throw new RuntimeException("Internal error,please try again late!",e);
         }
     }
 
     @Override
-    public Map<String ,List<Transaction>> getSuspiciousTransactions(double thresholdAmount, String unusualLocation,
+    public Map<String ,List<TransactionResponseDto>> getSuspiciousTransactions(double thresholdAmount, String unusualLocation,
             int maxTransactionsPerMinute){
         try{
             List<Transaction> txs = transactionRepository.findAll();
-            List<Transaction> susAmount = new ArrayList<>();
-            susAmount.addAll(txs.stream().filter(t-> t.amount() > thresholdAmount).toList());
+            List<TransactionResponseDto> susAmount = new ArrayList<>();
+            susAmount.addAll(txs.stream().filter(t-> t.amount() > thresholdAmount).map(TransactionMapper::transactionToDto).toList());
             
-            List<Transaction> susLocation = new ArrayList<>();
+            List<TransactionResponseDto> susLocation = new ArrayList<>();
             if(unusualLocation != null && !unusualLocation.isEmpty()){
-                susLocation.addAll(txs.stream().filter(t -> t.location().contains(unusualLocation)).toList());
+                susLocation.addAll(txs.stream().filter(t -> t.location().contains(unusualLocation)).map(TransactionMapper::transactionToDto).toList());
             }
             Map<String ,List<Transaction>> byAccount = txs.stream().collect(Collectors.groupingBy(Transaction::accountId));
             List<Transaction> susTpm = new ArrayList<>();
@@ -102,7 +106,7 @@ public class ReportServiceImpl implements ReportService {
                     }
                 }
             }
-            Map<String, List<Transaction>> map = Map.of("susAmount",susAmount,"susLocation",susLocation,"susTpm",susTpm);
+            Map<String, List<TransactionResponseDto>> map = Map.of("susAmount",susAmount,"susLocation",susLocation,"susTpm",susTpm.stream().map(TransactionMapper::transactionToDto).toList());
             return map;
         }catch(SQLException e){
             throw new RuntimeException("Internal error,please try again late!",e);
